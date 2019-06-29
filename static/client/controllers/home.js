@@ -1,10 +1,10 @@
 controllers.controller("home", ["$scope", "loading", "$modal", "confirmModal", "sysService", "errorModal", "msgModal", function ($scope, loading, $modal, confirmModal, sysService, errorModal, msgModal) {
 
     $scope.args = {
-        sys_name: "",
-        sys_code: "",
-        owner: "",
-        selected_id: ""
+        name: "",
+        address: "",
+        type: "",
+        owner: ""
     };
 
     //内容显示页数和数量
@@ -16,13 +16,27 @@ controllers.controller("home", ["$scope", "loading", "$modal", "confirmModal", "
         pageSize: "10",
         currentPage: 1
     };
-    $scope.template = [{id:1,text:"aaa"},{id:2,text:"bbb"}];
+    $scope.template = [{id:1,text:"运维开发工程师"},{id:2,text:"运维自动化工程师"}];
 
     $scope.templateOption = {
         data: "template",
         multiple: false,
     };
 
+
+    $scope.userList = [];
+    $scope.initsdd = function () {
+        loading.open();
+        sysService.search_user({}, {}, function (res) {
+            loading.close();
+            $scope.userList = res.data
+        })
+    };
+    $scope.initsdd();
+     $scope.templateOption2 = {
+        data: "userList",
+        multiple: false,
+    };
 
     $scope.inits = function () {
         loading.open();
@@ -31,7 +45,7 @@ controllers.controller("home", ["$scope", "loading", "$modal", "confirmModal", "
 
         })
     };
-    $scope.inits();
+
     $scope.setPagingData = function (data, pageSize, page) {
         $scope.PagingData = data.slice((page - 1) * pageSize, page * pageSize);
         $scope.totalSerItems = data.length;
@@ -105,14 +119,14 @@ controllers.controller("home", ["$scope", "loading", "$modal", "confirmModal", "
         //根据id删除系统
         var id = row.entity.id;
         confirmModal.open({
-            text: "确定删除该系统吗？",
+            text: "确定删除该考试吗？",
             confirmClick: function () {
                 loading.open();
-                sysService.delete_sys({id: id}, {}, function (res) {
+                sysService.delete_sys({}, {id: id}, function (res) {
                     loading.close();
                     if (res.result) {
                         $scope.hostList.splice(row.rowIndex, 1);
-                        msgModal.open("success", "删除系统成功！");
+                        msgModal.open("success", "删除考试成功！");
                         $scope.getPagedDataAsync($scope.pagingOptions.pageSize, $scope.pagingOptions.currentPage);
                     }
                     else {
@@ -187,18 +201,17 @@ controllers.controller("home", ["$scope", "loading", "$modal", "confirmModal", "
         pagingOptions: $scope.pagingOptions,
         totalServerItems: 'totalSerItems',
         columnDefs: [
-            {field: "sys_name", displayName: "系统名", width: 160},
-            {field: "sys_code", displayName: "系统简称", width: 140},
-            {field: "owners", displayName: "负责人", width: 180},
-            {field: "is_control", displayName: "是否权限控制", width: 160},
-            {field: "department", displayName: "所属产品线", width: 160},
-            {field: "comment", displayName: "备注", width: 180},
+            {field: "biz_name", displayName: "业务名称", width: 160},
+            {field: "name", displayName: "考试名称", width: 140},
+            {field: "type", displayName: "考试类型", width: 180},
+            {field: "when_created", displayName: "考试时间", width: 160},
+            {field: "status", displayName: "考试状态", width: 160},
+            {field: "address", displayName: "考试地点", width: 180},
             {
                 displayName: "操作",
                 cellTemplate: '<div style="width:100%;padding-top:5px;text-align: center">' +
-                '<span style="cursor: pointer" class="btn btn-xs btn-primary" ng-click="modify_sys(row)">修改</span>&emsp;' +
                 '<span style="cursor: pointer" class="btn btn-xs btn-danger" ng-click="delete_sys(row)">删除</span>' +
-                '<span style="cursor: pointer" class="btn btn-xs btn-danger" ui-sref="my_test({id:row.entity.id})">跳转</span>' +
+                '<span style="cursor: pointer" class="btn btn-xs btn-danger" ui-sref="my_test({id:row.entity.id})">详情</span>' +
                 '</div>'
             }
         ]

@@ -3,25 +3,24 @@
         <legend style="">查询条件</legend>
         <div class="container-fluid">
             <div style="float:left;">
-                <label style="float:left;margin-top: 5px;">系统名：</label>
-                <input type="text" ng-model="args.sys_name" style="width:150px;float:left;"
-                       class="form-control" placeholder="请输入系统名"/>
+                <label style="float:left;margin-top: 5px;">考试名称：</label>
+                <input type="text" ng-model="args.name" style="width:150px;float:left;"
+                       class="form-control" />
             </div>
             <div style="float:left;margin-left: 10px;">
-                <label style="float:left;margin-top: 5px;">系统简称：</label>
-                <input type="text" ng-model="args.sys_code" style="width:150px;float:left;"
-                       class="form-control" placeholder="请输入系统简称"/>
-            </div>
-
-            <div style="float:left;margin-left: 10px;">
-                <label style="float:left;margin-top: 5px;">负责人：</label>
-                <input type="text" ng-model="args.owner" style="width:150px;float:left;"
-                       class="form-control" placeholder="请输入负责人"/>
+                <label style="float:left;margin-top: 5px;">考试地点：</label>
+                <input type="text" ng-model="args.address" style="width:150px;float:left;"
+                       class="form-control" />
             </div>
 
             <div style="float:left;margin-left: 10px;">
-                <label style="float:left;margin-top: 5px;">下拉选择：</label>
-                <input type="text" cw-selectstr2="templateOption" ng-model="args.selected_id" style="width:150px;float:left;"
+                <label style="float:left;margin-top: 5px;">考试类型：</label>
+                <input type="text" cw-selectstr2="templateOption" ng-model="args.type" style="width:150px;float:left;"
+                       class="" />
+            </div>
+            <div style="float:left;margin-left: 10px;">
+                <label style="float:left;margin-top: 5px;">考试负责人：</label>
+                <input type="text" cw-selectstr2="templateOption2" ng-model="args.owner" style="width:150px;float:left;"
                        class="" />
             </div>
 
@@ -34,13 +33,7 @@
             </div>
 
 
-            <input id="uploadFile" style="display: none" onchange="angular.element(this).scope().uploadCsv()"
-                   name="uploadFile" type="file"/>
-            <div style="float: right;margin-right: 20px;">
-                <button type="submit" class="button_op" onclick="document.getElementById('uploadFile').value = ''; document.getElementById('uploadFile').click();"
-                        style="background: #0090ff;color: #fff;width: 92px"> 导入模板
-                </button>
-            </div>
+
 
         </div>
     </fieldset>

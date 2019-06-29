@@ -1,20 +1,69 @@
 controllers.controller("addSys", ["$scope","loading","$modalInstance","msgModal","sysService","errorModal","$filter",function ( $scope,loading,$modalInstance,msgModal,sysService,errorModal,$filter) {
     $scope.title = "添加系统";
     $scope.args = {
-        sys_name: "",
-        sys_code: "",
-        first_owner:"",
-        is_control:""
-    };
-    $scope.userList = [{id:2, text: "dkdkd"}, {id:3, text: "ssssss"}];
+        biz: "",
+        name: "",
+        type:"",
+        owner:"",
+        phone:"",
+        start_time:"",
+        address:"",
+        title:"",
+        bizL: []
 
+    };
+    $scope.bizList = [];
+
+    $scope.inits = function () {
+        loading.open();
+        sysService.search_biz({}, $scope.args, function (res) {
+            loading.close();
+            $scope.bizList = res.data
+            $scope.args.bizL = res.data
+        })
+    };
+    $scope.inits();
 
     // multiple为true则是多选
     $scope.dbOption1 = {
+        data: "bizList",
+        multiple: false,
+        modelData: ""
+    };
+    $scope.uList = [{id:1,text:'运维开发工程师'},{id:2,text:'运维自动化工程师'}]
+    $scope.dbOption2 = {
+        data: "uList",
+        multiple: false,
+        modelData: ""
+    };
+
+    $scope.userList = []
+    $scope.initsdd = function () {
+        loading.open();
+        sysService.search_user({}, {}, function (res) {
+            loading.close();
+            $scope.userList = res.data
+        })
+    };
+    $scope.initsdd();
+
+
+     $scope.dbOption3 = {
         data: "userList",
         multiple: false,
         modelData: ""
     };
+
+
+
+
+      $scope.uploadCsv = function () {
+          $scope.args.title = "考试题目1"
+          alert("上传文件成功")
+        };
+
+
+
 
 
     // 复选框
@@ -65,7 +114,7 @@ controllers.controller("addSys", ["$scope","loading","$modalInstance","msgModal"
     var effective_time = dateNow.setDate(dateNow.getDate() + 365);
     // 把时间转成普通格式
     $scope.args.start_time = $filter('date')(effective_time, 'yyyy-MM-dd HH:mm')
-    $scope.args.end_time = $filter('date')(effective_time, 'yyyy-MM-dd HH:mm')
+
 
 
 
@@ -83,7 +132,7 @@ controllers.controller("addSys", ["$scope","loading","$modalInstance","msgModal"
         sysService.add_sys({}, $scope.args, function (res) {
             loading.close();
             if (res.result) {
-                msgModal.open("success", "添加系统成功！！");
+                msgModal.open("success", "添加考试成功！！");
                 $modalInstance.close(res.data);
              }
             else {

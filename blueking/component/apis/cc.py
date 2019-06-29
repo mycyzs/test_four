@@ -93,6 +93,8 @@ class CollectionsCC(object):
             path='/api/c/compapi{bk_api_ver}/cc/search_host/',
             description=u'根据条件查询主机'
         )
+
+
         self.search_inst_by_object = ComponentAPI(
             client=self.client, method='POST',
             path='/api/c/compapi{bk_api_ver}/cc/search_inst_by_object/',

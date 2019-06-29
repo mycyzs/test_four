@@ -1,13 +1,22 @@
 # -*- coding:utf-8 -*-
+import codecs
+import csv
 import datetime
+import json
+import os
+
+import httplib2
+from django.http import HttpResponse
 
 from blueking.component.shortcuts import get_client_by_request, get_client_by_user
 from common.log import logger
 from common.mymako import render_json
-from conf.default import APP_ID, APP_TOKEN
-
+from conf.default import APP_ID, APP_TOKEN, BK_PAAS_HOST, PROJECT_ROOT
 
 # 获取平台所有模型
+from home_application.models import Host, Server
+
+
 def search_init(request):
     try:
         client = get_client_by_user(request.user.username)
@@ -108,8 +117,8 @@ def search_buseness(request):
         user_business_list = []
         if result["result"]:
             user_business_list = [
-                {"bk_biz_id": i["bk_biz_id"], "bk_biz_name": i["bk_biz_name"]} for i in result["data"]["info"]
-                if request.user.username in i["bk_biz_maintainer"].split(",")
+                {"id": i["bk_biz_id"], "text": i["bk_biz_name"]} for i in result["data"]["info"]
+
             ]
         return render_json({"result": True, "data": user_business_list})
     except Exception as e:
@@ -260,102 +269,95 @@ def get_count(request):
 
 
 def get_count_zhu(request):
-    data = [
-        {'name': 'Windows服务器', 'data': [1]},
-        {'name': 'AD服务器', 'data': [3], 'color': "#4cb5b0"},
-        {'name': 'TEST服务器', 'data': [5]}
-    ]
+
+    request_data = json.loads(request.body)
+    host = Host.objects.get(id=request_data['id'])
+    servers = Server.objects.filter(host=host)
+    depart = set([i.depart for i in servers])
+    data = []
+
+    for de in depart:
+        sec = Server.objects.filter(result=u'通过').count()
+        fail = Server.objects.filter(result=u'未通过').count()
+        data.append({'name': de, 'data':[sec, fail]})
+    # data = [
+    #     {'name': 'Windows服务器', 'data': [1,2]},
+    #     {'name': 'AD服务器', 'data': [3], 'color': "#4cb5b0"},
+    #     {'name': 'TEST服务器', 'data': [5]}
+    # ]
 
     return render_json({'result':True,'data':data})
 
 
 
 # 导入csv文件
-# 导入cvs文件
-# def up_cvs(request):
-#     try:
-#         username = request.user.username
-#         up_data = json.loads(request.body)
-#         auth = []
-#         success = 0
-#         faild = ''
-#         if username:
-#             auth.append(username)
-#         for data in up_data:
-#             try:
-#                 template = Screen.objects.create(name=data['name'],config=data['config'],background_img=data['back_img'], adapter_type=data['adapter_type'], width=data['width'], height=data['height'], cover=data['cover'],when_created=u.get_time_now_str(),is_tmpl=True, auth=auth,creator=username
-#                                       )
-#                 for inst in eval(data['control_inst']):
-#                     try:
-#                         control = Control.objects.get(code=inst['control_code'])
-#                     except Exception as e:
-#                         break
-#                     if inst['line_nodes']:
-#                         ControlInst.objects.create(size_posi=json.dumps(inst['size_posi']), config=json.dumps(inst["config"]), static_data=json.dumps(inst['static_data']), control=control, screen=template, line_nodes=json.dumps(inst['line_nodes']))
-#                     else:
-#                         ControlInst.objects.create(size_posi=json.dumps(inst['size_posi']), config=json.dumps(inst["config"]),
-#                                                    static_data=json.dumps(inst['static_data']), control=control,
-#                                                    screen=template)
-#                 success += 1
-#             except Exception as e:
-#                 faild = "导入失败"
-#                 continue
-#         if success == len(up_data):
-#             return u.render_success_json()
-#         else:
-#             return u.render_fail_json(faild)
-#     except Exception as e:
-#         logger.exception('upload cvs error:{0}'.format(e.message))
-#         return u.render_fail_json("csv文件上传失败!!")
+#导入cvs文件
+def up_cvs(request):
+    try:
+        username = request.user.username
+        up_data = json.loads(request.body)
+        kaoshi_id = up_data[0]['kaoshi_id']
+        host = Host.objects.get(id=kaoshi_id)
+        for data in up_data:
+            Server.objects.create(name=data['name'], depart=data['depart'], score=data['score'], result=data['result'], comment=data['comment'], host=host)
+        return render_json({"result": True})
+    except Exception as e:
+        return render_json({'result': False})
 
 
 
 #导出文件
-# def download_file(file_path, file_name):
-#     try:
-#         file_path = file_path
-#         file_buffer = open(file_path, 'rb').read()
-#         response = HttpResponse(file_buffer, content_type='APPLICATION/OCTET-STREAM')
-#         response['Content-Disposition'] = 'attachment; filename=' + file_name
-#         response['Content-Length'] = os.path.getsize(file_path)
-#         return response
-#     except Exception as e:
-#         logger.exception("download file error:{0}".format(e.message))
+def download_file(file_path, file_name):
+    try:
+        file_path = file_path
+        file_buffer = open(file_path, 'rb').read()
+        response = HttpResponse(file_buffer, content_type='APPLICATION/OCTET-STREAM')
+        response['Content-Disposition'] = 'attachment; filename=' + file_name
+        response['Content-Length'] = os.path.getsize(file_path)
+        return response
+    except Exception as e:
+        logger.exception("download file error:{0}".format(e.message))
 #
 #
-# def down_cvs(request):
-#     try:
-#         template_id = request.GET.get("template_id")
-#         temp_list = template_id.split(',')
-#         data_list = []
-#         for temp in temp_list:
-#             try:
-#                 template = Screen.objects.get(id=temp)
-#             except Exception as e:
-#                 return HttpResponse("id为{0}的模板不存在!!".format(temp))
-#             control_inst = ControlInst.objects.filter(screen_id=temp)
-#             inst_list = []
-#             for inst in control_inst:
-#                 inst_list.append({
-#                     "size_posi": json.loads(inst.size_posi),
-#                     "config": json.loads(inst.config),
-#                     "static_data": json.loads(inst.static_data),
-#                     "control_code": inst.control.code,
-#                     "line_nodes": json.loads(inst.line_nodes) if inst.line_nodes else ""
-#                 })
-#
-#             data_list.append([
-#                 template.name, template.background_img, template.adapter_type, template.config, template.width, template.height, template.cover, inst_list
-#             ])
-#         f = codecs.open('Template-Info.csv', 'wb', "gbk")
-#         writer = csv.writer(f)
-#         writer.writerow([u"模板名称",u"背景图", u"自适应方式",u"配置", u"宽度", u"高度", "cover", "control_inst"])
-#         writer.writerows(data_list)
-#         f.close()
-#         file_path = "{0}/Template-Info.csv".format(PROJECT_ROOT).replace("\\", "/")
-#         file_name = "Template-Info.csv"
-#         return download_file(file_path, file_name)
-#
-#     except Exception as e:
-#         logger.exception('download cvs file error:{0}'.format(e.message))
-#         return HttpResponse('导出失败！')
+def down_cvs(request):
+    try:
+        template_id = request.GET.get("template_id")
+        data_list = []
+        host = Host.objects.get(id=template_id)
+
+        data_list = [host.name, host.address, host.when_created, host.owner]
+        f = codecs.open('exam.csv', 'wb', "gbk")
+        writer = csv.writer(f)
+        writer.writerow([u"考试名称",u"考试地点", u"考试时间",u"负责人"])
+        writer.writerows(data_list)
+        f.close()
+        file_path = "{0}/exam.csv".format(PROJECT_ROOT).replace("\\", "/")
+        file_name = "exam.csv"
+        return download_file(file_path, file_name)
+
+    except Exception as e:
+        logger.exception('download cvs file error:{0}'.format(e.message))
+        return HttpResponse('导出失败！')
+
+
+def get_all_user(request):
+    try:
+        http = httplib2.Http()
+        http.disable_ssl_certificate_validation = True
+        url = BK_PAAS_HOST + "/api/c/compapi/v2/bk_login/get_all_users/"
+        param = {
+            "bk_app_code": APP_ID,
+            "bk_app_secret": APP_TOKEN,
+            "bk_username": "admin"
+        }
+        headers = {'Content-type': 'application/json'}
+        response, content = http.request(url, 'POST', headers=headers, body=json.dumps(param))
+        if response['status'] == "200":
+            res_data = json.loads(content)
+            user_list = [{'id': i['bk_username'], 'text': i['bk_username']} for i in
+                        res_data['data']]
+            return render_json({'result': True, 'data': user_list})
+        else:
+            return render_json({'result': True, 'data': []})
+    except Exception as e:
+        logger.exception("error:{0}".format(e.message))

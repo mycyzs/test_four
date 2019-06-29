@@ -1,1 +1,44 @@
-<div style="cursor: pointer" ui-sref="home">返回</div>
+
+<div style="width: 100%;height: 500px;overflow-y: auto">
+<div>
+    <div style="float: left;margin-left: 60px">
+        <ul>
+            <li>基本信息</li>
+            <li class="my-dd">考试名称:{{ args.name }}</li>
+            <li class="my-dd">类型:{{ args.type }}</li>
+            <li class="my-dd">关联业务:{{ args.biz_name }}</li>
+            <li class="my-dd">地点:{{ args.address }}</li>
+            <li class="my-dd">时间:{{ args.when_created }}</li>
+            <li class="my-dd">负责人:{{ args.owner }}</li>
+            <li class="my-dd">联系方式:{{ args.phone }}</li>
+            <li class="my-dd">考试题目:{{ args.title }}</li>
+            <li><button ng-click="down()">点击下载</button></li>
+        </ul>
+    </div>
+
+
+    <div style="margin-left: 100px">
+        <div style="margin-left: 50px;margin-top: 5px;float: left">
+            <div highcharts="test_chart" style="width: 400px; height: 400px;"></div>
+        </div>
+    </div>
+
+    <div style="float: right;margin-right: 50px;">
+        <button type="submit" class="button_op"
+                style="width: 92px" ui-sref="home"> 返回
+        </button>
+    </div>
+
+    <input id="uploadFile" style="display: none" onchange="angular.element(this).scope().uploadCsv()"
+                   name="uploadFile" type="file"/>
+    <div style="float: right;margin-right: 200px;">
+        <button type="submit" class="button_op" onclick="document.getElementById('uploadFile').value = ''; document.getElementById('uploadFile').click();"
+                style="background: #0090ff;color: #fff;width: 150px"> 导入考生CSV
+        </button>
+    </div>
+
+
+</div>
+
+    <div cw-adaptbody="100" ng-grid="gridOption" style="width:100%;overflow-y: auto;overflow-x: hidden;"></div>
+</div>
